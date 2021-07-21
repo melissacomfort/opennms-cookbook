@@ -2044,7 +2044,7 @@ template "#{onms_home}/etc/users.xml" do
   mode 0640 if mv.to_i > 19
   owner 'root'
   group 'root'
-  if node['opennms']['version'] == '26.2.2-1' || node['opennms']['version'].to_i > 26
+  if node['opennms']['version'] == '27.2.0-1' || node['opennms']['version'].to_i > 27
     variables(
       name: node['opennms']['users']['admin']['name'],
       user_comments: node['opennms']['users']['admin']['user_comments'],

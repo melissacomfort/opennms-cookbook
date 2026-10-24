@@ -22,7 +22,7 @@ control 'threshold_common' do
     its('rrd_repository') { should eq '/opt/opennms/share/rrd/response' }
   end
 
-  describe opennms_event('uei.opennms.org/thresholdTest/testThresholdExceeded', 'events/chef-threshold.events.xml') do
+  describe opennms_event('uei.opennms.org/cheftest/testThresholdExceeded', 'events/chef.events.xml') do
     it { should exist }
     its('eventLabel')     { should eq 'Chef defined event: testThresholdExceeded' }
     its('descr')          { should eq '<p>A threshold defined by a chef recipe that tests thresholds has been exceeded.</p>' }
@@ -32,7 +32,7 @@ control 'threshold_common' do
     its('severity')       { should eq 'Minor' }
   end
 
-  describe opennms_event('uei.opennms.org/thresholdTest/testThresholdRearmed', 'events/chef-threshold.events.xml') do
+  describe opennms_event('uei.opennms.org/cheftest/testThresholdRearmed', 'events/chef.events.xml') do
     it { should exist }
     its('eventLabel')     { should eq 'Chef defined event: testThresholdRearmed' }
     its('descr')          { should eq '<p>A threshold defined by a chef recipe that tests thresholds has been rearmed.</p>' }

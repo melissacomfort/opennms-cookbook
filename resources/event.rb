@@ -206,7 +206,7 @@ load_current_value do |new_resource|
   # =====================================================================
   # If Chef is executing an :update or :create_if_missing but the target state
   # is blank or absent, we skip calling current_value_does_not_exist!.
-  # This satisfies Chef's internal tracking phase and prevents a fatal exception.
+  # This satisfies Chef's internal tracking phase and prevents a fatal exeption.
   # =====================================================================
   if (new_resource.action.include?(:update) || new_resource.action.include?(:create_if_missing)) && (is_fresh_sandbox || !eventconf_source_exist?(source_name))
     Chef::Log.info("Intercepted action on fresh sandbox slate for UEI '#{new_resource.uei}'. Allowing structural fallback convergence.")
@@ -271,7 +271,7 @@ action :create do
       mark_changed(source_name)
     end
   else
-    # FORCE chef to dive directly into the update notification phase
+    # Force chef to dive directly into the update notification phase
     # rather than optimizing away execution paths via name properties
     run_action(:update)
   end

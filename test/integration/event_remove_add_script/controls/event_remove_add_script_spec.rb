@@ -1,17 +1,17 @@
 # frozen_string_literal: true
 
-control 'event_remove_add_varbindsdecode' do
-  title 'OpenNMS Event Remove and Add Varbindsdecode Validation'
+control 'event_remove_add_script' do
+  title 'OpenNMS Event Remove and Add Script Validation'
 
-  describe opennms_event('uei.opennms.org/cheftest/thresholdExceeded2-event_remove_add_varbindsdecode', 'events/chef.events.xml') do
+  describe opennms_event('uei.opennms.org/cheftest/thresholdExceeded2-event_remove_add_script', 'events/chef.events.xml') do
     it { should exist }
 
-    it 'contains the re-added varbind decoding configurations' do
-      raw_decode = subject['varbindsdecode']
-      decode_list = raw_decode.is_a?(Hash) ? [raw_decode] : raw_decode
+    it 'contains the re-added script configurations' do
+      raw_script = subject['script']
+      script_list = raw_script.is_a?(Hash) ? [raw_script] : raw_script
 
-      expect(decode_list).to include(
-                               hash_including('parmid' => 'theParmId')
+      expect(script_list).to include(
+                               hash_including('name' => 'anScript', 'language' => 'groovy')
                              )
     end
   end

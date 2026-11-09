@@ -115,9 +115,9 @@ class OpenNmsEventApi < Inspec.resource(1)
             'decode' => v.xpath('decode').map do |d|
               {
                 'varbindvalue' => d['varbindvalue'] || d['varbindValue'] || d.at_xpath('varbindvalue')&.text || d.at_xpath('varbindValue')&.text,
-                'varbinddecodedstring' => d['varbinddecodedstring'] || d['varbindDecodedString'] || d.at_xpath('varbinddecodedstring')&.text || d.at_xpath('varbindDecodedString')&.text
+                'varbinddecodedstring' => d['varbinddecodedstring'] || d['varbindDecodedString'] || d.at_xpath('varbinddecodedstring')&.text || d.at_xpath('varbindDecodedString')&.text,
               }
-            end
+            end,
           }
         end,
         'parameter' => e.xpath('parameter').map do |p|

@@ -20,7 +20,6 @@ control 'event_noop' do
       tticket_hash = subject['tticket'] || {}
       expect(tticket_hash['info']).to eq 'tticketInfo'
       expect(tticket_hash['state']).to eq 'off'
-      
       alarm_hash = subject['alarmData'] || {}
       expect(alarm_hash['reduction-key']).to eq '%uei%:%dpname%:%nodeid%:%interface%:%parm[ds]%:%parm[threshold]%:%parm[trigger]%:%parm[rearm]%:%parm[label]%'
       expect(alarm_hash['alarm-type']).to eq 1

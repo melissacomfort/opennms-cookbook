@@ -11,7 +11,7 @@ control 'event_edit_autoaction' do
       actions = raw_actions.is_a?(Hash) ? [raw_actions] : raw_actions
 
       expect(actions).to eq([
-                              { 'action' => 'someaction2', 'state' => 'on' }
+                              { 'action' => 'someaction2', 'state' => 'on' },
                             ])
     end
   end

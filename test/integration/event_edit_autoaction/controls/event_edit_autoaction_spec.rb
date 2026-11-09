@@ -6,14 +6,13 @@ control 'event_edit_autoaction' do
   describe opennms_event('uei.opennms.org/cheftest/thresholdExceeded2-event_edit_autoaction', 'events/chef.events.xml') do
     it { should exist }
 
-    it 'contains the correct collectionGroup attributes' do
-      expect(subject.event_data['collectionGroup']).to include(
-                                                         hash_including(
-                                                           'name' => 'nodeGroup',
-                                                           'resourceType' => 'nodeSnmp',
-                                                           'instance' => 'instanceParmName'
-                                                         )
-                                                       )
+    it 'contains the correct autoaction configurations' do
+      raw_actions = subject['autoaction']
+      actions = raw_actions.is_a?(Hash) ? [raw_actions] : raw_actions
+
+      expect(actions).to eq([
+                              { 'action' => 'someaction2', 'state' => 'on' }
+                            ])
     end
   end
 end

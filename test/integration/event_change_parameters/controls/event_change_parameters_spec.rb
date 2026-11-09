@@ -7,7 +7,7 @@ control 'event_change_parameters' do
     it { should exist }
 
     it 'validates the parameter fallback state based on schema capabilities' do
-      raw_params = subject.parameter
+      raw_params = subject['parameter']
       params = raw_params.is_a?(Hash) ? [raw_params] : raw_params
 
       if params.nil?

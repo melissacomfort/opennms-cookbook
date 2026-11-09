@@ -80,14 +80,46 @@ class OpenNmsEventApi < Inspec.resource(1)
     doc.remove_namespaces!
 
     doc.xpath('//event').map do |e|
+      # Parse optional single objects safely
+      ad = e.at_xpath('alarm-data')
+      alarm_data_hash = ad ? { 'reduction-key' => ad['reduction-key'], 'alarm-type' => ad['alarm-type'].to_i, 'auto-clean' => ad['auto-clean'] } : nil
+
+      tt = e.at_xpath('tticket')
+      tticket_hash = tt ? { 'info' => tt.text, 'state' => tt['state'] } : nil
+
+      logmsg_node = e.at_xpath('logmsg')
+      logmsg_hash = logmsg_node ? { 'content' => logmsg_node.text, 'dest' => logmsg_node['dest'] } : nil
+
       {
         'uei' => e.at_xpath('uei')&.text,
         'event-label' => e.at_xpath('event-label')&.text,
+        'eventLabel' => e.at_xpath('event-label')&.text, # Fallback compatibility mapping
         'descr' => e.at_xpath('descr')&.text,
-        'logmsg' => e.at_xpath('logmsg')&.text,
+        'logmsg' => logmsg_hash,
         'severity' => e.at_xpath('severity')&.text,
-        'forward' => e.xpath('forward').map { |f| { 'mechanism' => f['mechanism'], 'state' => f['state'] } },
+        'mouseovertext' => e.at_xpath('mouseovertext')&.text,
+        'operinstruct' => e.at_xpath('operinstruct')&.text,
+        'alarm-data' => alarm_data_hash,
+        'alarmData' => alarm_data_hash, # Fallback mapping
+        'tticket' => tticket_hash,
+        'forward' => e.xpath('forward').map { |f| { 'mechanism' => f['mechanism'], 'state' => f['state'], 'info' => f.text } },
+        'autoaction' => e.xpath('autoaction').map { |a| { 'action' => a.text, 'state' => a['state'] } },
         'script' => e.xpath('script').map { |s| { 'name' => s.text, 'language' => s['language'] } },
+        'varbindsdecode' => e.xpath('varbindsdecode').map do |v|
+          # Checks child element node text, then falls back to checking attribute brackets safely
+          parmid_element = v.at_xpath('parmid') || v.at_xpath('parmIds') || v.at_xpath('parmids')
+          parmid_value = parmid_element ? parmid_element.text : (v['parmid'] || v['parmIds'] || v['parmids'])
+
+          {
+            'parmid' => parmid_value,
+            'decode' => v.xpath('decode').map do |d|
+              {
+                'varbindvalue' => d['varbindvalue'] || d['varbindValue'] || d.at_xpath('varbindvalue')&.text || d.at_xpath('varbindValue')&.text,
+                'varbinddecodedstring' => d['varbinddecodedstring'] || d['varbindDecodedString'] || d.at_xpath('varbinddecodedstring')&.text || d.at_xpath('varbindDecodedString')&.text
+              }
+            end
+          }
+        end,
         'parameter' => e.xpath('parameter').map do |p|
           h = { 'name' => p['name'], 'value' => p['value'] }
           h['expand'] = true if p['expand'] == 'true'

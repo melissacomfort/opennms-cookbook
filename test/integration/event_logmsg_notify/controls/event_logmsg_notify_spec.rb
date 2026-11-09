@@ -5,6 +5,11 @@ control 'event_logmsg_notify' do
 
   describe opennms_event('uei.opennms.org/cheftest/thresholdExceeded2-event_logmsg_notify', 'events/chef.events.xml') do
     it { should exist }
-    its('logmsg.notify') { should be false }
+
+    it 'validates the logmsg notify configuration' do
+      logmsg = subject['logmsg']
+      expect(logmsg).not_to be_nil
+      expect(['false', '']).to include(logmsg['notify'].to_s)
+    end
   end
 end

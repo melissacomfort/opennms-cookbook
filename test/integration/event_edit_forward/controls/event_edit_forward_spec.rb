@@ -7,9 +7,12 @@ control 'event_edit_forward' do
     it { should exist }
 
     it 'contains the updated forward configurations' do
-      expect(subject.event_data['forward']).to include(
-                                                        hash_including('info' => 'fwdInfo', 'state' => 'off', 'mechanism' => 'snmpudp')
-                                                      )
+      raw_forward = subject['forward']
+      forward_list = raw_forward.is_a?(Hash) ? [raw_forward] : raw_forward
+
+      expect(forward_list).to include(
+                                hash_including('info' => 'fwdInfo', 'state' => 'off', 'mechanism' => 'snmpudp')
+                              )
     end
   end
 end

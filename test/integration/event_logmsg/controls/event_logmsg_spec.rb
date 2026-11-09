@@ -5,6 +5,11 @@ control 'event_logmsg' do
 
   describe opennms_event('uei.opennms.org/cheftest/thresholdExceeded2-event_logmsg', 'events/chef.events.xml') do
     it { should exist }
-    its('logmsg.content') { should eq 'A thresholds has been exceeded.' }
+
+    it 'validates the logmsg content properties' do
+      logmsg = subject['logmsg']
+      expect(logmsg).not_to be_nil
+      expect(logmsg['content']).to eq 'A thresholds has been exceeded.'
+    end
   end
 end

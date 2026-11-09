@@ -7,9 +7,12 @@ control 'event_remove_add_autoaction' do
     it { should exist }
 
     it 'contains the re-added autoaction configuration elements' do
-      expect(subject.event_data['autoaction']).to include(
-                                                           hash_including('action' => 'someaction', 'state' => 'off')
-                                                         )
+      raw_autoaction = subject['autoaction']
+      autoactions = raw_autoaction.is_a?(Hash) ? [raw_autoaction] : raw_autoaction
+
+      expect(autoactions).to include(
+                               hash_including('action' => 'someaction', 'state' => 'off')
+                             )
     end
   end
 end

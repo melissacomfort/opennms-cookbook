@@ -7,6 +7,6 @@ control 'event_remove_add_alarm_data' do
     it { should exist }
     its('alarmData.reductionKey') { should eq '%uei%:%dpname%:%nodeid%:%interface%:%parm[ds]%:%parm[threshold]%:%parm[trigger]%:%parm[rearm]%:%parm[label]%' }
     its('alarmData.alarmType')    { should eq 1 }
-    its('alarmData.autoClean')    { should be false }
+    its('alarmData.autoClean')    { should eq 'false' }
   end
 end

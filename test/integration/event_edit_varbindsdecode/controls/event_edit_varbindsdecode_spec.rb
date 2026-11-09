@@ -7,9 +7,12 @@ control 'event_edit_varbindsdecode' do
     it { should exist }
 
     it 'contains the updated varbind decoding configurations' do
-      expect(subject.event_data['varbindsdecode']).to include(
-                                                               hash_including('parmid' => 'theParmIds')
-                                                             )
+      raw_decode = subject['varbindsdecode']
+      decode_list = raw_decode.is_a?(Hash) ? [raw_decode] : raw_decode
+
+      expect(decode_list).to include(
+                               hash_including('parmid' => 'theParmIds')
+                             )
     end
   end
 end

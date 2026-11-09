@@ -5,6 +5,11 @@ control 'event_logmsg_dest' do
 
   describe opennms_event('uei.opennms.org/cheftest/thresholdExceeded2-event_logmsg_dest', 'events/chef.events.xml') do
     it { should exist }
-    its('logmsg.dest') { should eq 'discardtraps' }
+
+    it 'validates the logmsg destination property' do
+      logmsg = subject['logmsg']
+      expect(logmsg).not_to be_nil
+      expect(logmsg['dest']).to eq 'discardtraps'
+    end
   end
 end

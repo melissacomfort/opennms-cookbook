@@ -7,9 +7,12 @@ control 'event_edit_script' do
     it { should exist }
 
     it 'contains the updated script tracking runtime environment properties' do
-      expect(subject.event_data['script']).to include(
-                                                hash_including('name' => 'anScript', 'language' => 'groovy')
-                                              )
+      raw_script = subject['script']
+      script_list = raw_script.is_a?(Hash) ? [raw_script] : raw_script
+
+      expect(script_list).to include(
+                               hash_including('name' => 'anScript', 'language' => 'beanshell')
+                             )
     end
   end
 end

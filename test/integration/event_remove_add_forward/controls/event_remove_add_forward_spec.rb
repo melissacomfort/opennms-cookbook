@@ -7,9 +7,12 @@ control 'event_remove_add_forward' do
     it { should exist }
 
     it 'contains the re-added forward configuration elements' do
-      expect(subject.event_data['forward']).to include(
-                                                        hash_including('info' => 'fwdInfo', 'state' => 'off', 'mechanism' => 'snmptcp')
-                                                      )
+      raw_forward = subject['forward']
+      forward_list = raw_forward.is_a?(Hash) ? [raw_forward] : raw_forward
+
+      expect(forward_list).to include(
+                                hash_including('info' => 'fwdInfo', 'state' => 'off', 'mechanism' => 'snmptcp')
+                              )
     end
   end
 end

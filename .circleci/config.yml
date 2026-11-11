@@ -51,7 +51,11 @@ jobs:
       - run:
           name: Authenticate against Docker Hub registry
           command: |
-            echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USER" --password-stdin
+            for i in 1 2 3; do
+              echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USER" --password-stdin && break
+              echo "Docker login attempt $i failed, retrying in 10s..."
+              sleep 10
+            done
       - run:
           name: Install Cinc Workstation Omnibus Packages
           command: |

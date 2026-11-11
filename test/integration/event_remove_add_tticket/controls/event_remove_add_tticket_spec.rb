@@ -1,14 +1,13 @@
 # frozen_string_literal: true
 
-control 'event_remove_varbindsdecode' do
-  title 'OpenNMS Event Remove Varbindsdecode Validation'
+control 'event_remove_add_tticket' do
+  title 'OpenNMS Event Remove Add Tticket Validation'
 
-  describe opennms_event('uei.opennms.org/cheftest/thresholdExceeded2-event_remove_varbindsdecode', 'events/chef.events.xml') do
+  describe opennms_event('uei.opennms.org/cheftest/thresholdExceeded2-event_remove_add_tticket', 'events/chef.events.xml') do
     it { should exist }
 
-    it 'does not contain any varbind decoding configurations' do
-      raw_decode = subject['varbindsdecode']
-      expect(raw_decode.nil? || raw_decode.empty?).to be true
+    it 'contains the expected tticket configuration' do
+      expect(subject['tticket']).to eq('info' => 'tticketInfo', 'state' => 'on')
     end
   end
 end

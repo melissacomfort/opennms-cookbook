@@ -1,10 +1,15 @@
 # frozen_string_literal: true
 
-include_recipe 'opennms_resource_tests::event'
+control 'event_remove_forward' do
+  title 'OpenNMS Event Remove Forward Validation'
 
-opennms_event 'remove script' do
-  uei 'uei.opennms.org/cheftest/thresholdExceeded2-event_remove_script'
-  mask [{ 'mename' => 'id', 'mevalue' => ['.1.3.6.1.4.1.11385.102.1'] }, { 'mename' => 'generic', 'mevalue' => ['6'] }, { 'mename' => 'specific', 'mevalue' => ['2'] }]
-  source_name 'events/chef.events.xml'
-  script []
+  describe opennms_event('uei.opennms.org/cheftest/thresholdExceeded2-event_remove_forward', 'events/chef.events.xml') do
+    it 'verifies that the event resource is present' do
+      expect(subject).to_not be_nil
+    end
+
+    it 'does not contain any forward configurations' do
+      expect(subject['forward']).to be_nil
+    end
+  end
 end

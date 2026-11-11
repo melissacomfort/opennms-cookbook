@@ -8,7 +8,7 @@ control 'event_remove_varbindsdecode' do
 
     it 'does not contain any varbind decoding configurations' do
       raw_decode = subject['varbindsdecode']
-      expect(raw_decode.nil?  || raw_decode.empty?).to be true
+      expect(raw_decode.nil? || raw_decode.empty?).to be true
     end
   end
 end

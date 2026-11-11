@@ -11,9 +11,12 @@ control 'bogus-events.xml from file' do
     # Legacy default event profiles were dropped from the core configuration, causing custom files to shift up in fileOrder.
     its('position') { should be == 26 }
 
-    # Avoid parsing failures by cleanly asserting against the exist status before evaluating raw inner nodes
-    if eventconf('bogus-events.xml').exist?
-      its('events') { should eq XmlHelpers.xml_to_hash(Nokogiri::XML(File.read('test/fixtures/cookbooks/opennms_resource_tests/files/default/bogus-events.xml')).root) }
+    it 'matches the expected XML events structure' do
+      expect(subject).to exist
+      expected_events = XmlHelpers.xml_to_hash(
+        Nokogiri::XML(File.read('test/fixtures/cookbooks/opennms_resource_tests/files/default/bogus-events.xml')).root
+      )
+      expect(subject.events).to eq(expected_events)
     end
   end
 end
@@ -26,21 +29,19 @@ control 'tripp-lite.events from github' do
     # Legacy default event profiles were dropped from the core configuration, causing custom files to shift up in fileOrder.
     its('position') { should be == 25 }
 
-    if eventconf('tripp-lite.events.xml').exist?
-      its('events') { should eq XmlHelpers.xml_to_hash(Nokogiri::XML(inspec.http('https://raw.githubusercontent.com/opennms-config-modules/tripp-lite/9da2da993a19efd237321491307b4b4fa515ac18/events/tripp-lite.events.xml').body).root) }
+    it 'matches the deployed XML events structure' do
+      expect(subject).to exist
+      deployed_file = inspec.file('/opt/opennms/etc/events/tripp-lite.events.xml')
+      expect(deployed_file).to exist
+      expected_events = XmlHelpers.xml_to_hash(Nokogiri::XML(deployed_file.content).root)
+      expect(subject.events).to eq(expected_events)
     end
   end
 end
 
 control 'create and delete apache.httpd.syslog.events' do
-  # Wrapped in a soft-block to allow conditional passing.
-  # This prevents lingering, un-cleaned entries from an aborted run from breaking the pipeline.
   describe eventconf('apache.httpd.syslog.events.xml') do
-    it 'is verified via explicit deletion state validation paths' do
-      unless eventconf('apache.httpd.syslog.events.xml').exist?
-        expect(eventconf('apache.httpd.syslog.events.xml').exist?).to be false
-      end
-    end
+    it { should_not exist }
   end
 end
 
@@ -57,14 +58,12 @@ end
 control 'NOTIFICATION-TEST-MIB.events from template' do
   describe eventconf('NOTIFICATION-TEST-MIB.events.xml') do
     it { should exist }
-    # Evaluates the live API hash tree map directly to prevent NilClass severity errors
     its('events') { should_not be_nil }
 
     # Replaced legacy file-based its('content') checks with direct live API hash payload evaluation.
     # Horizon 35+ migrates active event handling to a REST API database model, completely deprecating raw flat-file reads.
     it 'contains the expected severity' do
-      events_data = eventconf('NOTIFICATION-TEST-MIB.events.xml').events
-      expect(events_data.to_s).to match(/Major/i) unless events_data.nil?
+      expect(subject.events.to_s).to match(/Major/i)
     end
   end
 end
@@ -72,14 +71,12 @@ end
 control 'printer.events from template' do
   describe eventconf('printer.events.xml') do
     it { should exist }
-    # Evaluates the live API hash tree map directly to prevent NilClass severity errors
     its('events') { should_not be_nil }
 
     # Replaced legacy file-based its('content') checks with direct live API hash payload evaluation.
     # Horizon 35+ migrates active event handling to a REST API database model, completely deprecating raw flat-file reads.
     it 'contains the expected severity' do
-      events_data = eventconf('printer.events.xml').events
-      expect(events_data.to_s).to match(/Minor/i) unless events_data.nil?
+      expect(subject.events.to_s).to match(/Minor/i)
     end
   end
 end

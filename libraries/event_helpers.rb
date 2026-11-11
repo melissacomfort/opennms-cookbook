@@ -142,33 +142,39 @@ module Opennms
           end
 
           def delete_source(source_name)
-            source = current_source(source_name)
-            r = self
-            with_run_context :root do
-              declare_resource(:ruby_block, "DELETE #{source_name}") do
-                block do
-                  uri = URI.parse(r.restv2url)
-                  base_url = "#{uri.scheme}://#{uri.host}:#{uri.port}/opennms"
-
-                  response = RestClient::Request.execute(
-                    method: :delete,
-                    # Target the verified API layout endpoint path
-                    url: "#{base_url}/api/v2/eventconf/sources",
-                    user: 'admin',
-                    password: r.admin_secret_from_vault('password'),
-                    payload: "{ \"sourceIds\": [ #{source['id']} ] }",
-                    timeout: 30,
-                    open_timeout: 10,
-                    headers: {
-                      content_type: :json,
-                      accept: :json,
-                    })
-                  raise "Unable to delete source #{source_name} with id #{source['id']} via API. Is OpenNMS running?" unless [200, 204].include?(response.code)
-                end
-                action :nothing
-                delayed_action :run
-              end
+            # Clear from root node.run_state queues so the bulk uploader cannot recreate it
+            root_state = run_context.root_run_context.node.run_state
+            if root_state['opennms_bulk_eventconf']
+              root_state['opennms_bulk_eventconf'].reject! { |item| item[:name] == source_name }
             end
+            root_state.dig('opennms', 'eventconf_sources')&.delete(source_name)
+
+            # Remove the local dual-write XML file if present
+            onms_home = node['opennms']['conf']['home'] || '/opt/opennms'
+            target_file_path = ::File.join(onms_home, 'etc', 'events', "#{source_name_from_file(source_name)}.xml")
+            ::File.delete(target_file_path) if ::File.exist?(target_file_path)
+
+            # Synchronously delete from the live OpenNMS API right now
+            source = current_source(source_name)
+            return if source.nil?
+
+            uri = URI.parse(restv2url)
+            base_url = "#{uri.scheme}://#{uri.host}:#{uri.port}/opennms"
+
+            response = RestClient::Request.execute(
+              method: :delete,
+              url: "#{base_url}/api/v2/eventconf/sources",
+              user: 'admin',
+              password: admin_secret_from_vault('password'),
+              payload: "{ \"sourceIds\": [ #{source['id']} ] }",
+              timeout: 30,
+              open_timeout: 10,
+              headers: {
+                content_type: :json,
+                accept: :json,
+              }
+            )
+            raise "Unable to delete source #{source_name} with id #{source['id']} via API. Is OpenNMS running?" unless [200, 204].include?(response.code)
           end
 
           def upload_eventconf(body, boundary, source_name)
@@ -230,26 +236,21 @@ module Opennms
             source = nil
             processed_records = 0
 
-            # ===================================================================
-            # SAFE BASE URL PARSING FOR HORIZON 35+
-            # ===================================================================
-            # Prevents /api/v2 or /rest from accidentally repeating in the string
-            # ===================================================================
             uri = URI.parse(restv2url)
             base_url = "#{uri.scheme}://#{uri.host}:#{uri.port}/opennms"
-
-            # Inside libraries/event_helpers.rb under eventconf_source_resource_create:
-            # Locate the loop that pre-populates the source cache and update it with strict limits and offsets:
+            pass = begin
+                     admin_secret_from_vault('password')
+                   rescue
+                     'admin'
+                   end
 
             begin
               loop do
                 resp = RestClient::Request.execute(
                   method: :get,
-                  # =====================================================================
-                  # EXPLICIT INT AND PARSED PARAMETERS EXECUTED SECURELY
-                  # =====================================================================
-                  url: "#{base_url}/api/v2/eventconf/filter/sources?filter=#{source_name}&limit=#{limit}&offset=#{offset}",
-                  headers: { 'Authorization' => "Basic #{Base64.strict_encode64("admin:#{admin_secret_from_vault('password')}")}" },
+                  url: "#{base_url}/api/v2/eventconf/filter/sources?sortBy=name&filter=#{source_name}&limit=#{limit}&offset=#{offset}",
+                  user: 'admin',
+                  password: pass,
                   timeout: 30,
                   open_timeout: 10
                 )
@@ -270,7 +271,7 @@ module Opennms
                 offset += limit
               end
             rescue => e
-              Chef::Log.warn("Unable to resolve direct source row tracking for #{source_name}: #{e}. Proceeding with clean default allocation.")
+              Chef::Log.warn("current_source error for #{source_name}: #{e.class} - #{e.message}")
             end
             source
           end
@@ -288,7 +289,7 @@ module Opennms
             node.run_state['opennms'] ||= {}
             node.run_state['opennms']['eventconf_sources'] ||= {}
             node.run_state['opennms']['eventconf_sources'][source_name] ||= {
-              'definition' => '<events xmlns="http://opennms.org"/>',
+              'definition' => '<events xmlns="http://xmlns.opennms.org/xsd/eventconf">',
             }
 
             r = self
@@ -372,10 +373,10 @@ module Opennms
                         # Check if a live, mutated state definition string exists in node run memory first
                         state_definition = r.node.run_state.dig('opennms', 'eventconf_sources', name, 'definition')
 
-                        if state_definition && state_definition != '<events xmlns="http://opennms.org"/>'
+                        if state_definition && state_definition != '<events xmlns="http://xmlns.opennms.org/xsd/eventconf">'
                           local_definitions[name] = state_definition
                         elsif source_object.nil?
-                          local_definitions[name] = '<events xmlns="http://opennms.org"/>'
+                          local_definitions[name] = '<events xmlns="http://xmlns.opennms.org/xsd/eventconf">'
                         else
                           begin
                             response = RestClient::Request.execute(
@@ -386,9 +387,9 @@ module Opennms
                               timeout: 30,
                               open_timeout: 10
                             )
-                            local_definitions[name] = response.code == 204 ? '<events xmlns="http://opennms.org"/>' : response.body
+                            local_definitions[name] = response.code == 204 ? '<events xmlns="http://xmlns.opennms.org/xsd/eventconf">' : response.body
                           rescue => e
-                            local_definitions[name] = '<events xmlns="http://opennms.org"/>'
+                            local_definitions[name] = '<events xmlns="http://xmlns.opennms.org/xsd/eventconf">'
                           end
                         end
 

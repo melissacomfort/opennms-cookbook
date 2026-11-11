@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+
 version: 2.1
 
 executors:
@@ -51,7 +52,20 @@ jobs:
       - run:
           name: Authenticate against Docker Hub registry
           command: |
-            echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USER" --password-stdin
+            # Prevent 15s IPv6 routing hangs on Ubuntu 24.04 VMs
+            sudo sysctl -w net.ipv6.conf.all.disable_ipv6=1
+            sudo sysctl -w net.ipv6.conf.default.disable_ipv6=1
+
+            # Stagger the 30 parallel containers (0-10s) to avoid simultaneous auth throttling
+            sleep $((RANDOM % 10))
+
+            # Retry login up to 5 times with backoff
+            for i in {1..5}; do
+              echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USER" --password-stdin && exit 0
+              echo "Docker login attempt $i failed, retrying in 5s..."
+              sleep 5
+            done
+            exit 1
       - run:
           name: Install Cinc Workstation Omnibus Packages
           command: |

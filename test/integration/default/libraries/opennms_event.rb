@@ -36,7 +36,7 @@ class OpenNmsEventApi < Inspec.resource(1)
   end
 
   def dig(*keys)
-    return nil if raw_event_data.nil?
+    return if raw_event_data.nil?
     OpenNmsDynamicMash.new(raw_event_data).dig(*keys)
   end
 
@@ -162,7 +162,6 @@ class OpenNmsEventApi < Inspec.resource(1)
         g['resourceType'] = cg['resourceType'] if cg['resourceType']
         g['resource_type'] = cg['resourceType'] if cg['resourceType']
         g['instance'] = cg['instance'] if cg['instance']
-        rrd = cg.at_xpath('rrd')
         rrd = cg.at_xpath('rrd')
         if rrd
           g['rrd'] = {

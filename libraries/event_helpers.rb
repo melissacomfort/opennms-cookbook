@@ -289,7 +289,7 @@ module Opennms
             node.run_state['opennms'] ||= {}
             node.run_state['opennms']['eventconf_sources'] ||= {}
             node.run_state['opennms']['eventconf_sources'][source_name] ||= {
-              'definition' => '<events xmlns="http://xmlns.opennms.org/xsd/eventconf">',
+              'definition' => '<events xmlns="http://xmlns.opennms.org/xsd/eventconf"/>',
             }
 
             r = self
@@ -326,7 +326,7 @@ module Opennms
 
                       begin
                         loop do
-                          # FIX 1: Fixed string interpolation syntax for query variables
+                          # Fixed string interpolation syntax for query variables
                           resp = RestClient::Request.execute(
                             method: :get,
                             url: "#{base_url}/api/v2/eventconf/filter/sources?limit=#{limit}&offset=#{offset}",
@@ -373,10 +373,10 @@ module Opennms
                         # Check if a live, mutated state definition string exists in node run memory first
                         state_definition = r.node.run_state.dig('opennms', 'eventconf_sources', name, 'definition')
 
-                        if state_definition && state_definition != '<events xmlns="http://xmlns.opennms.org/xsd/eventconf">'
+                        if state_definition && state_definition != '<events xmlns="http://xmlns.opennms.org/xsd/eventconf"/>'
                           local_definitions[name] = state_definition
                         elsif source_object.nil?
-                          local_definitions[name] = '<events xmlns="http://xmlns.opennms.org/xsd/eventconf">'
+                          local_definitions[name] = '<events xmlns="http://xmlns.opennms.org/xsd/eventconf"/>'
                         else
                           begin
                             response = RestClient::Request.execute(
@@ -387,9 +387,9 @@ module Opennms
                               timeout: 30,
                               open_timeout: 10
                             )
-                            local_definitions[name] = response.code == 204 ? '<events xmlns="http://xmlns.opennms.org/xsd/eventconf">' : response.body
+                            local_definitions[name] = response.code == 204 ? '<events xmlns="http://xmlns.opennms.org/xsd/eventconf"/>' : response.body
                           rescue => e
-                            local_definitions[name] = '<events xmlns="http://xmlns.opennms.org/xsd/eventconf">'
+                            local_definitions[name] = '<events xmlns="http://xmlns.opennms.org/xsd/eventconf"/>'
                           end
                         end
 

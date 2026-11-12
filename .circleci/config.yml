@@ -77,6 +77,7 @@ jobs:
           command: bundle install --prefer-local
       - run:
           name: Execute Test Kitchen Integration Matrix
+          no_output_timeout: 1h
           command: |
             export DOCKER_USER DOCKER_PASSWORD
 

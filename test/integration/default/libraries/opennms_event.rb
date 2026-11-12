@@ -121,7 +121,7 @@ class OpenNmsEventApi < Inspec.resource(1)
           'reduction_key' => ad['reduction-key'],
           'alarm-type' => ad['alarm-type'].to_i,
           'alarm_type' => ad['alarm-type'].to_i,
-          'auto-clean' => ad['auto-clean'],
+          'auto-clean' => ad['auto-clean'] == 'true',
           'auto_clean' => ad['auto-clean'] == 'true',
         }
         alarm_data_hash['clear-key'] = ad['clear-key'] if ad['clear-key']

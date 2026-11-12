@@ -25,9 +25,9 @@ provisioner:
         user_vault: creds
     yum:
       opennms-stable-common:
-        baseurl: http://yum.opennms.org/stable/common
+        baseurl: https://yum.opennms.org/stable/common
       opennms-stable-rhel9:
-        baseurl: http://yum.opennms.org/stable/rhel9
+        baseurl: https://yum.opennms.org/stable/rhel9
 
 verifier:
   name: inspec

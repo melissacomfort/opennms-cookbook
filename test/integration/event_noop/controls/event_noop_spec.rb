@@ -15,7 +15,7 @@ control 'event_noop' do
       logmsg_hash = subject['logmsg'] || {}
       expect(logmsg_hash['content']).to eq 'A threshold has been exceeded.'
       expect(logmsg_hash['dest']).to eq 'logndisplay'
-      expect(['true', 'false', '', nil]).to include(logmsg_hash['notify'])
+      expect([true, false, 'true', 'false', '', nil]).to include(logmsg_hash['notify'])
 
       tticket_hash = subject['tticket'] || {}
       expect(tticket_hash['info']).to eq 'tticketInfo'
@@ -23,7 +23,7 @@ control 'event_noop' do
       alarm_hash = subject['alarmData'] || {}
       expect(alarm_hash['reduction-key']).to eq '%uei%:%dpname%:%nodeid%:%interface%:%parm[ds]%:%parm[threshold]%:%parm[trigger]%:%parm[rearm]%:%parm[label]%'
       expect(alarm_hash['alarm-type']).to eq 1
-      expect(alarm_hash['auto-clean']).to eq 'false'
+      expect(alarm_hash['auto-clean']).to eq false
     end
 
     it 'contains the exact nested parameter collection elements' do

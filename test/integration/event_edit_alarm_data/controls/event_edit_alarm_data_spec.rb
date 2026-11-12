@@ -14,7 +14,13 @@ control 'event_edit_alarm_data' do
 
       reduction_key = alarm_data['reduction-key'] || alarm_data['reduction_key'] || alarm_data['reductionKey']
       alarm_type    = alarm_data['alarm-type']    || alarm_data['alarm_type']    || alarm_data['alarmType']
-      auto_clean    = alarm_data['auto-clean']    || alarm_data['auto_clean']    || alarm_data['autoClean']
+      auto_clean    = if alarm_data.key?('auto-clean')
+                        alarm_data['auto-clean']
+                      elsif alarm_data.key?('auto_clean')
+                        alarm_data['auto_clean']
+                      else
+                        alarm_data['autoClean']
+                      end
 
       # Validates the edited values, NOT the baseline values
       expect(reduction_key).to eq '%uei%:%dpname%:%nodeid%:%interface%:%parm[ds]%:%parm[threshold]%:%parm[trigger]%:%parm[rearm]%:%parm[label]%aids'

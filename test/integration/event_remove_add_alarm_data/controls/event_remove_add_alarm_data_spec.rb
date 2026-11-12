@@ -10,7 +10,7 @@ control 'event_remove_add_alarm_data' do
       alarm_hash = subject['alarmData'] || {}
       expect(alarm_hash['reduction-key']).to eq '%uei%:%dpname%:%nodeid%:%interface%:%parm[ds]%:%parm[threshold]%:%parm[trigger]%:%parm[rearm]%:%parm[label]%'
       expect(alarm_hash['alarm-type']).to eq 1
-      expect(alarm_hash['auto-clean']).to eq 'false'
+      expect(alarm_hash['auto-clean']).to eq false
     end
   end
 end

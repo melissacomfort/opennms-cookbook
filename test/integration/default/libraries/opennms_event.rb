@@ -190,7 +190,7 @@ class OpenNmsEventApi < Inspec.resource(1)
         'eventLabel' => e.at_xpath('event-label')&.text&.strip,
         'event_label' => e.at_xpath('event-label')&.text&.strip,
         'descr' => e.at_xpath('descr')&.text&.strip,
-        'logmsg' => logmsg_text,
+        'logmsg' => logmsg_text ? OpenNmsLogmsg.new(logmsg_text, logmsg_dest, logmsg_notify) : nil,
         'logmsg_dest' => logmsg_dest,
         'logmsg-dest' => logmsg_dest,
         'logmsg_notify' => logmsg_notify,
@@ -298,5 +298,27 @@ class OpenNmsDynamicMash
   def [](key)
     k = key.to_s
     @hash[k] || @hash[k.tr('_', '-')] || @hash[k.tr('-', '_')] || @hash[key]
+  end
+end
+
+class OpenNmsLogmsg < String
+  def initialize(text, dest = nil, notify = nil)
+    super(text.to_s)
+    @meta = {}
+    @meta['content'] = text.to_s unless text.nil?
+    @meta['dest'] = dest unless dest.nil?
+    @meta['notify'] = notify unless notify.nil?
+  end
+
+  def include?(other)
+    if other.is_a?(Hash)
+      other.all? { |k, v| @meta[k.to_s] == v }
+    else
+      super(other)
+    end
+  end
+
+  def [](key)
+    key.is_a?(String) || key.is_a?(Symbol) ? @meta[key.to_s] : super(key)
   end
 end

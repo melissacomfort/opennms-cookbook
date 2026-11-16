@@ -307,7 +307,9 @@ action :delete do
   end
 
   source_name = source_name_from_file(new_resource.source_name)
-  if eventconf_source_exist?(source_name)
+  in_run_state = !node.run_state.dig('opennms', 'eventconf_sources', source_name).nil?
+
+  if in_run_state || eventconf_source_exist?(source_name)
     eventconf_source_resource_init(source_name, new_resource.eventconf_position)
     eventfile = Opennms::Cookbook::ConfigHelpers::Event::EventDefinitionFile.new
     eventfile.load!(node.run_state['opennms']['eventconf_sources'][source_name]['definition'])

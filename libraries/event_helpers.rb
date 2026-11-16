@@ -270,7 +270,7 @@ module Opennms
             node.run_state['opennms'] ||= {}
             node.run_state['opennms']['eventconf_sources'] ||= {}
             node.run_state['opennms']['eventconf_sources'][source_name] ||= {
-              'definition' => '<events xmlns="http://xmlns.opennms.org/xsd/eventconf"/>',
+              'definition' => '<events xmlns="http://opennms.org"/>',
             }
 
             r = self
@@ -287,16 +287,16 @@ module Opennms
                     payload_batch = r.node.run_state['opennms_bulk_eventconf']
 
                     if payload_batch && !payload_batch.empty?
-                      # Sort the batch by position before compiling the upload
-                      payload_batch = payload_batch.sort_by do |item|
-                        case item[:position].to_s.downcase
-                        when 'top' then 0
-                        when 'bottom' then 2
-                        else 1
-                        end
+                      # Deduplicate batch by source name, preserving original resource order and first-seen position
+                      deduped_batch = []
+                      seen_names = {}
+                      payload_batch.each do |item|
+                        next if seen_names[item[:name]]
+                        seen_names[item[:name]] = true
+                        deduped_batch << item
                       end
 
-                      Chef::Log.info("Executing optimized bulk processing for #{payload_batch.length} items...")
+                      Chef::Log.info("Executing optimized bulk processing for #{deduped_batch.length} items...")
 
                       uri = URI.parse(r.restv2url)
                       base_url = "#{uri.scheme}://#{uri.host}:#{uri.port}/opennms"
@@ -333,6 +333,7 @@ module Opennms
                       boundary = "----RubyMultipart#{SecureRandom.hex(16)}"
                       body = ''
                       local_definitions = {}
+                      bottom_event_files = []
 
                       onms_home = r.node['opennms']['conf']['home'] || '/opt/opennms'
                       events_dir = ::File.join(onms_home, 'etc_archive', 'events')
@@ -344,9 +345,9 @@ module Opennms
                         ::FileUtils.chmod(0755, events_dir)
                       end
 
-                      empty_skeleton = '<events xmlns="http://xmlns.opennms.org/xsd/eventconf"/>'
+                      empty_skeleton = '<events xmlns="http://opennms.org"/>'
 
-                      payload_batch.each do |item|
+                      deduped_batch.each do |item|
                         name = item[:name]
                         source_object = all_sources_cache[name]
                         state_definition = r.node.run_state.dig('opennms', 'eventconf_sources', name, 'definition')
@@ -378,7 +379,21 @@ module Opennms
                         body << "\r\n"
                         body << local_definitions[name]
                         body << "\r\n"
+
+                        if source_object.nil? && item[:position].to_s == 'bottom'
+                          bottom_event_files << "<event-file>#{clean_filename.encode(xml: :text)}.xml</event-file>"
+                        end
                       end
+
+                      unless bottom_event_files.empty?
+                        body << "--#{boundary}\r\n"
+                        body << %(Content-Disposition: form-data; name="upload"; filename=eventconf.xml\r\n)
+                        body << "Content-Type: application/xml\r\n"
+                        body << "\r\n"
+                        body << "<events xmlns=\"http://opennms.org\">#{bottom_event_files.join}</events>"
+                        body << "\r\n"
+                      end
+
                       body << "--#{boundary}--\r\n"
 
                       # Upload to OpenNMS API first (raises if response is not 200/204)
@@ -416,7 +431,6 @@ module Opennms
             end
           end
         end
-
         module EventTemplate
           def eventfile_resource_init(file)
             eventfile_resource_create(file) unless eventfile_resource_exist?(file)
@@ -1064,28 +1078,28 @@ module Opennms
           def eql?(evtdef)
             return false unless self.class.eql?(evtdef.class)
             return true if uei.eql?(evtdef.uei) &&
-                           mask.eql?(evtdef.mask) &&
-                           event_label.eql?(evtdef.event_label) &&
-                           descr.eql?(evtdef.descr) &&
-                           logmsg.eql?(evtdef.logmsg) &&
-                           logmsg_dest.eql?(evtdef.logmsg_dest) &&
-                           logmsg_notify.eql?(evtdef.logmsg_notify) &&
-                           collection_group.eql?(evtdef.collection_group) &&
-                           severity.eql?(evtdef.severity) &&
-                           operinstruct.eql?(evtdef.operinstruct) &&
-                           autoaction.eql?(evtdef.autoaction) &&
-                           varbindsdecode.eql?(evtdef.varbindsdecode) &&
-                           parameters.eql?(evtdef.parameters) &&
-                           operaction.eql?(evtdef.operaction) &&
-                           autoacknowledge.eql?(evtdef.autoacknowledge) &&
-                           loggroup.eql?(evtdef.loggroup) &&
-                           tticket.eql?(evtdef.tticket) &&
-                           forward.eql?(evtdef.forward) &&
-                           script.eql?(evtdef.script) &&
-                           mouseovertext.eql?(evtdef.mouseovertext) &&
-                           alarm_data.eql?(evtdef.alarm_data) &&
-                           filters.eql?(evtdef.filters) &&
-                           priority.eql?(evtdef.priority)
+              mask.eql?(evtdef.mask) &&
+              event_label.eql?(evtdef.event_label) &&
+              descr.eql?(evtdef.descr) &&
+              logmsg.eql?(evtdef.logmsg) &&
+              logmsg_dest.eql?(evtdef.logmsg_dest) &&
+              logmsg_notify.eql?(evtdef.logmsg_notify) &&
+              collection_group.eql?(evtdef.collection_group) &&
+              severity.eql?(evtdef.severity) &&
+              operinstruct.eql?(evtdef.operinstruct) &&
+              autoaction.eql?(evtdef.autoaction) &&
+              varbindsdecode.eql?(evtdef.varbindsdecode) &&
+              parameters.eql?(evtdef.parameters) &&
+              operaction.eql?(evtdef.operaction) &&
+              autoacknowledge.eql?(evtdef.autoacknowledge) &&
+              loggroup.eql?(evtdef.loggroup) &&
+              tticket.eql?(evtdef.tticket) &&
+              forward.eql?(evtdef.forward) &&
+              script.eql?(evtdef.script) &&
+              mouseovertext.eql?(evtdef.mouseovertext) &&
+              alarm_data.eql?(evtdef.alarm_data) &&
+              filters.eql?(evtdef.filters) &&
+              priority.eql?(evtdef.priority)
             false
           end
 

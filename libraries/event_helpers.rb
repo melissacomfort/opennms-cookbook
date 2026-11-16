@@ -431,6 +431,7 @@ module Opennms
             end
           end
         end
+        
         module EventTemplate
           def eventfile_resource_init(file)
             eventfile_resource_create(file) unless eventfile_resource_exist?(file)

@@ -302,7 +302,7 @@ action :delete do
     end
   rescue Chef::Exceptions::ResourceNotFound
     raise Chef::Exceptions::ValidationFailed,
-          'Cannot execute event deletion because Service["opennms"] is missing from the resource collection. '
+          'Cannot execute event deletion because Service["opennms"] is missing from the resource collection. ' \
           'Please ensure the base opennms service framework is declared before calling this event resource.'
   end
 

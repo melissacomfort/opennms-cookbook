@@ -1078,28 +1078,28 @@ module Opennms
           def eql?(evtdef)
             return false unless self.class.eql?(evtdef.class)
             return true if uei.eql?(evtdef.uei) &&
-              mask.eql?(evtdef.mask) &&
-              event_label.eql?(evtdef.event_label) &&
-              descr.eql?(evtdef.descr) &&
-              logmsg.eql?(evtdef.logmsg) &&
-              logmsg_dest.eql?(evtdef.logmsg_dest) &&
-              logmsg_notify.eql?(evtdef.logmsg_notify) &&
-              collection_group.eql?(evtdef.collection_group) &&
-              severity.eql?(evtdef.severity) &&
-              operinstruct.eql?(evtdef.operinstruct) &&
-              autoaction.eql?(evtdef.autoaction) &&
-              varbindsdecode.eql?(evtdef.varbindsdecode) &&
-              parameters.eql?(evtdef.parameters) &&
-              operaction.eql?(evtdef.operaction) &&
-              autoacknowledge.eql?(evtdef.autoacknowledge) &&
-              loggroup.eql?(evtdef.loggroup) &&
-              tticket.eql?(evtdef.tticket) &&
-              forward.eql?(evtdef.forward) &&
-              script.eql?(evtdef.script) &&
-              mouseovertext.eql?(evtdef.mouseovertext) &&
-              alarm_data.eql?(evtdef.alarm_data) &&
-              filters.eql?(evtdef.filters) &&
-              priority.eql?(evtdef.priority)
+                           mask.eql?(evtdef.mask) &&
+                           event_label.eql?(evtdef.event_label) &&
+                           descr.eql?(evtdef.descr) &&
+                           logmsg.eql?(evtdef.logmsg) &&
+                           logmsg_dest.eql?(evtdef.logmsg_dest) &&
+                           logmsg_notify.eql?(evtdef.logmsg_notify) &&
+                           collection_group.eql?(evtdef.collection_group) &&
+                           severity.eql?(evtdef.severity) &&
+                           operinstruct.eql?(evtdef.operinstruct) &&
+                           autoaction.eql?(evtdef.autoaction) &&
+                           varbindsdecode.eql?(evtdef.varbindsdecode) &&
+                           parameters.eql?(evtdef.parameters) &&
+                           operaction.eql?(evtdef.operaction) &&
+                           autoacknowledge.eql?(evtdef.autoacknowledge) &&
+                           loggroup.eql?(evtdef.loggroup) &&
+                           tticket.eql?(evtdef.tticket) &&
+                           forward.eql?(evtdef.forward) &&
+                           script.eql?(evtdef.script) &&
+                           mouseovertext.eql?(evtdef.mouseovertext) &&
+                           alarm_data.eql?(evtdef.alarm_data) &&
+                           filters.eql?(evtdef.filters) &&
+                           priority.eql?(evtdef.priority)
             false
           end
 

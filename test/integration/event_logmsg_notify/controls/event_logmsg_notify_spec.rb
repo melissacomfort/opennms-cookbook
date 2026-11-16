@@ -1,15 +1,7 @@
 # frozen_string_literal: true
-
 control 'event_logmsg_notify' do
-  title 'OpenNMS Event Logmsg Notify Validation'
-
-  describe opennms_event('uei.opennms.org/cheftest/thresholdExceeded2-event_logmsg_notify', 'events/chef.events.xml') do
+  describe event('uei.opennms.org/cheftest/thresholdExceeded2', 'events/chef.events.xml', [{ 'mename' => 'id', 'mevalue' => ['.1.3.6.1.4.1.11385.102.1'] }, { 'mename' => 'generic', 'mevalue' => ['6'] }, { 'mename' => 'specific', 'mevalue' => ['2'] }]) do
     it { should exist }
-
-    it 'validates the logmsg notify configuration' do
-      logmsg = subject['logmsg']
-      expect(logmsg).not_to be_nil
-      expect(['false', '']).to include(logmsg['notify'].to_s)
-    end
+    its('logmsg_notify') { should be false }
   end
 end

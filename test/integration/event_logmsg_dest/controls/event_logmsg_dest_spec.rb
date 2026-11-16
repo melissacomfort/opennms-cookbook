@@ -1,15 +1,7 @@
 # frozen_string_literal: true
-
 control 'event_logmsg_dest' do
-  title 'OpenNMS Event Logmsg Destination Validation'
-
-  describe opennms_event('uei.opennms.org/cheftest/thresholdExceeded2-event_logmsg_dest', 'events/chef.events.xml') do
+  describe event('uei.opennms.org/cheftest/thresholdExceeded2', 'events/chef.events.xml', [{ 'mename' => 'id', 'mevalue' => ['.1.3.6.1.4.1.11385.102.1'] }, { 'mename' => 'generic', 'mevalue' => ['6'] }, { 'mename' => 'specific', 'mevalue' => ['2'] }]) do
     it { should exist }
-
-    it 'validates the logmsg destination property' do
-      logmsg = subject['logmsg']
-      expect(logmsg).not_to be_nil
-      expect(logmsg['dest']).to eq 'discardtraps'
-    end
+    its('logmsg_dest') { should eq 'discardtraps' }
   end
 end

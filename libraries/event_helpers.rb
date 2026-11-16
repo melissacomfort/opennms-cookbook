@@ -142,7 +142,7 @@ module Opennms
 
             # Remove the local dual-write XML file if present
             onms_home = node['opennms']['conf']['home'] || '/opt/opennms'
-            target_file_path = ::File.join(onms_home, 'etc', 'events', "#{source_name_from_file(source_name)}.xml")
+            target_file_path = ::File.join(onms_home, 'etc_archive', 'events', "#{source_name_from_file(source_name)}.xml")
             ::File.delete(target_file_path) if ::File.exist?(target_file_path)
 
             # Synchronously delete from the live OpenNMS API right now
@@ -252,7 +252,7 @@ module Opennms
                 offset += limit
               end
             rescue => e
-              Chef::Log.warn("current_source error for #{source_name}: #{e.class} - #{e.message}")
+              raise "Unable to retrieve eventconf sources from API. Is OpenNMS running? Error: #{e}"
             end
             source
           end
@@ -327,7 +327,7 @@ module Opennms
                           offset += limit
                         end
                       rescue StandardError => e
-                        Chef::Log.warn("Could not pre-populate source cache safely: #{e}. Proceeding carefully...")
+                        raise "Unable to retrieve eventconf sources from API. Is OpenNMS running? Error: #{e}"
                       end
 
                       boundary = "----RubyMultipart#{SecureRandom.hex(16)}"
@@ -335,7 +335,7 @@ module Opennms
                       local_definitions = {}
 
                       onms_home = r.node['opennms']['conf']['home'] || '/opt/opennms'
-                      events_dir = ::File.join(onms_home, 'etc', 'events')
+                      events_dir = ::File.join(onms_home, 'etc_archive', 'events')
 
                       unless ::File.directory?(events_dir)
                         Chef::Log.info("Creating missing filesystem directory layout target container: #{events_dir}")

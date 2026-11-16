@@ -9,7 +9,6 @@ executors:
         auth:
           username: $DOCKER_USER
           password: $DOCKER_PASSWORD
-    working_directory: ~/cookbook
 
 jobs:
   style:
@@ -42,11 +41,7 @@ jobs:
   integration:
     machine:
       image: ubuntu-2404:current
-    # Upgrades execution frame memory allocation to 8GB RAM to mitigate
-    # persistent OpenNMS Java runtime heap space crash regressions.
-    resource_class: large
     parallelism: 30
-    working_directory: ~/cookbook
     steps:
       - checkout
       - run:

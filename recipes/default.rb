@@ -95,22 +95,6 @@ service 'opennms' do
   action [:enable, :start]
 end
 
-ruby_block 'wait for opennms to accept traffic' do
-  block do
-    require 'socket'
-    loop do
-      begin
-        # Attempt connection to the main OpenNMS web port
-        TCPSocket.new('localhost', 8980).close
-        break
-      rescue Errno::ECONNREFUSED, Errno::EHOSTUNREACH
-        Chef::Log.info('Waiting for OpenNMS API port 8980 to wake up...')
-        sleep 5
-      end
-    end
-  end
-end
-
 include_recipe 'opennms::adminpw'
 include_recipe 'opennms::default_resources'
 include_recipe 'opennms::templates'

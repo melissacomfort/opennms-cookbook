@@ -133,39 +133,40 @@ module Opennms
           end
 
           def delete_source(source_name)
-            # Clear from root node.run_state queues so the bulk uploader cannot recreate it
-            root_state = run_context.root_run_context.node.run_state
-            if root_state['opennms_bulk_eventconf']
-              root_state['opennms_bulk_eventconf'].reject! { |item| item[:name] == source_name }
+            r = self
+            with_run_context :root do
+              declare_resource(:ruby_block, "DELETE #{source_name}") do
+                block do
+                  # Remove the local dual-write XML file if present
+                  onms_home = r.node['opennms']['conf']['home'] || '/opt/opennms'
+                  target_file_path = ::File.join(onms_home, 'etc_archive', 'events', "#{r.source_name_from_file(source_name)}.xml")
+                  ::File.delete(target_file_path) if ::File.exist?(target_file_path)
+
+                  source = r.send(:current_source, source_name)
+                  next if source.nil?
+
+                  uri = URI.parse(r.restv2url)
+                  base_url = "#{uri.scheme}://#{uri.host}:#{uri.port}/opennms"
+
+                  response = RestClient::Request.execute(
+                    method: :delete,
+                    url: "#{base_url}/api/v2/eventconf/sources",
+                    user: 'admin',
+                    password: r.admin_secret_from_vault('password'),
+                    payload: "{ \"sourceIds\": [ #{source['id']} ] }",
+                    timeout: 30,
+                    open_timeout: 10,
+                    headers: {
+                      content_type: :json,
+                      accept: :json,
+                    }
+                  )
+                  raise "Unable to delete source #{source_name} with id #{source['id']} via API. Is OpenNMS running?" unless [200, 204].include?(response.code)
+                end
+                action :nothing
+                delayed_action :run
+              end
             end
-            root_state.dig('opennms', 'eventconf_sources')&.delete(source_name)
-
-            # Remove the local dual-write XML file if present
-            onms_home = node['opennms']['conf']['home'] || '/opt/opennms'
-            target_file_path = ::File.join(onms_home, 'etc_archive', 'events', "#{source_name_from_file(source_name)}.xml")
-            ::File.delete(target_file_path) if ::File.exist?(target_file_path)
-
-            # Synchronously delete from the live OpenNMS API right now
-            source = current_source(source_name)
-            return if source.nil?
-
-            uri = URI.parse(restv2url)
-            base_url = "#{uri.scheme}://#{uri.host}:#{uri.port}/opennms"
-
-            response = RestClient::Request.execute(
-              method: :delete,
-              url: "#{base_url}/api/v2/eventconf/sources",
-              user: 'admin',
-              password: admin_secret_from_vault('password'),
-              payload: "{ \"sourceIds\": [ #{source['id']} ] }",
-              timeout: 30,
-              open_timeout: 10,
-              headers: {
-                content_type: :json,
-                accept: :json,
-              }
-            )
-            raise "Unable to delete source #{source_name} with id #{source['id']} via API. Is OpenNMS running?" unless [200, 204].include?(response.code)
           end
 
           def upload_eventconf(body, boundary, source_name)
@@ -431,7 +432,7 @@ module Opennms
             end
           end
         end
-        
+
         module EventTemplate
           def eventfile_resource_init(file)
             eventfile_resource_create(file) unless eventfile_resource_exist?(file)

@@ -404,6 +404,7 @@ module Opennms
             end
           end
         end
+        
         class EventDefinitionFile
           include Opennms::Cookbook::ConfigHelpers::Event::Helper
           attr_reader :entries

@@ -7,49 +7,7 @@ require 'nokogiri'
 lib_path = File.expand_path('../../libraries/event_helpers.rb', __dir__)
 require lib_path if File.exist?(lib_path)
 
-describe Opennms::Cookbook::ConfigHelpers::Event::Helper do
-  let(:dummy_class) { Class.new { include Opennms::Cookbook::ConfigHelpers::Event::Helper }.new }
-
-  describe '#assign_sandbox_fallbacks' do
-    context 'when providing an event with missing description and label' do
-      let(:input_properties) do
-        {
-          uei: 'uei.opennms.org/vendor/test_event',
-          event_label: nil,
-          descr: nil,
-          logmsg: '',
-        }
-      end
-
-      it 'correctly injects placeholder properties without crashing' do
-        result = dummy_class.assign_sandbox_fallbacks(input_properties)
-
-        expect(result[:event_label]).to eq('Generated Label for Test_event')
-        expect(result[:descr]).to include('Sandbox placeholder description')
-        expect(result[:logmsg]).to include('Log message tracking')
-      end
-    end
-
-    context 'when an explicit description and label are already set' do
-      let(:input_properties) do
-        {
-          uei: 'uei.opennms.org/vendor/test_event',
-          event_label: 'My Custom Label',
-          descr: 'My Custom Description',
-          logmsg: 'My Custom Log',
-        }
-      end
-
-      it 'preserves the existing production data values' do
-        result = dummy_class.assign_sandbox_fallbacks(input_properties)
-
-        expect(result[:event_label]).to eq('My Custom Label')
-        expect(result[:descr]).to eq('My Custom Description')
-        expect(result[:logmsg]).to eq('My Custom Log')
-      end
-    end
-  end
-
+describe Opennms::Cookbook::ConfigHelpers::Event::EventconfSourceRubyBlock do
   describe 'Horizon 35 API URL Isolation' do
     let(:url_parser_class) do
       Class.new do

@@ -242,9 +242,26 @@ module Opennms
 
             node.run_state['opennms'] ||= {}
             node.run_state['opennms']['eventconf_sources'] ||= {}
-            node.run_state['opennms']['eventconf_sources'][source_name] ||= {
-              'definition' => '<events xmlns="http://xmlns.opennms.org/xsd/eventconf"/>',
-            }
+            unless node.run_state['opennms']['eventconf_sources'].key?(source_name)
+              existing = current_source(source_name)
+              definition = '<events xmlns="http://xmlns.opennms.org/xsd/eventconf"/>'
+              if existing
+                uri = URI.parse(restv2url)
+                base_url = "#{uri.scheme}://#{uri.host}:#{uri.port}/opennms"
+                resp = RestClient::Request.execute(
+                  method: :get,
+                  url: "#{base_url}/api/v2/eventconf/sources/#{existing['id']}/events/download",
+                  user: 'admin',
+                  password: admin_secret_from_vault('password'),
+                  timeout: 30,
+                  open_timeout: 10
+                )
+                definition = resp.body if resp.code == 200 && !resp.body.to_s.strip.empty?
+              end
+              node.run_state['opennms']['eventconf_sources'][source_name] = {
+                'definition' => definition,
+              }
+            end
 
             r = self
             with_run_context :root do
